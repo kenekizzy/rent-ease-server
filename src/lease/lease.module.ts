@@ -5,11 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Lease } from './entities/lease.entity';
 import { AuthModule } from 'src/auth';
 import { PropertiesModule } from 'src/properties/properties.module';
-
 import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Lease]), AuthModule, PropertiesModule, NotificationsModule],
+  imports: [TypeOrmModule.forFeature([Lease]), AuthModule, PropertiesModule, NotificationsModule, UsersModule],
   controllers: [LeaseController],
   providers: [LeaseService],
   exports: [LeaseService],

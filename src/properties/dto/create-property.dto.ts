@@ -6,13 +6,18 @@ import {
   IsOptional,
   Matches,
   IsEnum,
+  Min,
 } from 'class-validator';
-import { PropertyStatus } from '../entities/property.entity';
+import { PropertyStatus, PropertyType } from '../entities/property.entity';
 
 export class CreatePropertyDto {
   @IsString({ message: 'Address must be a string' })
   @IsNotEmpty({ message: 'Address is required' })
-  address: string;
+  addressLine1: string;
+
+  @IsOptional()
+  @IsString({ message: 'Address line 2 must be a string' })
+  addressLine2?: string;
 
   @IsString({ message: 'City must be a string' })
   @IsNotEmpty({ message: 'City is required' })
@@ -28,13 +33,24 @@ export class CreatePropertyDto {
   })
   zipCode: string;
 
+  @IsEnum(PropertyType, {
+    message: 'Invalid property type',
+  })
+  propertyType: PropertyType;
+
   @IsNumber({}, { message: 'Rent amount must be a number' })
   @IsPositive({ message: 'Rent amount must be positive' })
   rentAmount: number;
 
   @IsOptional()
-  @IsString({ message: 'Description must be a string' })
-  description?: string;
+  @IsNumber()
+  @Min(0)
+  bedrooms?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  bathrooms?: number;
 
   @IsOptional()
   @IsEnum(PropertyStatus, {

@@ -1,7 +1,7 @@
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Lease } from '../../lease/entities/lease.entity';
-import { Complaint } from './complaint.entity';
+import { Complaint } from 'src/complaints/entities/complaint.entity';
 import { Document } from '../../files/entities/document.entity';
 export declare enum PropertyType {
     APARTMENT = "apartment",

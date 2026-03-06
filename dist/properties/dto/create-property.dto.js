@@ -13,12 +13,15 @@ exports.CreatePropertyDto = void 0;
 const class_validator_1 = require("class-validator");
 const property_entity_1 = require("../entities/property.entity");
 class CreatePropertyDto {
-    address;
+    addressLine1;
+    addressLine2;
     city;
     state;
     zipCode;
+    propertyType;
     rentAmount;
-    description;
+    bedrooms;
+    bathrooms;
     status;
 }
 exports.CreatePropertyDto = CreatePropertyDto;
@@ -26,7 +29,12 @@ __decorate([
     (0, class_validator_1.IsString)({ message: 'Address must be a string' }),
     (0, class_validator_1.IsNotEmpty)({ message: 'Address is required' }),
     __metadata("design:type", String)
-], CreatePropertyDto.prototype, "address", void 0);
+], CreatePropertyDto.prototype, "addressLine1", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'Address line 2 must be a string' }),
+    __metadata("design:type", String)
+], CreatePropertyDto.prototype, "addressLine2", void 0);
 __decorate([
     (0, class_validator_1.IsString)({ message: 'City must be a string' }),
     (0, class_validator_1.IsNotEmpty)({ message: 'City is required' }),
@@ -45,15 +53,28 @@ __decorate([
     __metadata("design:type", String)
 ], CreatePropertyDto.prototype, "zipCode", void 0);
 __decorate([
+    (0, class_validator_1.IsEnum)(property_entity_1.PropertyType, {
+        message: 'Invalid property type',
+    }),
+    __metadata("design:type", String)
+], CreatePropertyDto.prototype, "propertyType", void 0);
+__decorate([
     (0, class_validator_1.IsNumber)({}, { message: 'Rent amount must be a number' }),
     (0, class_validator_1.IsPositive)({ message: 'Rent amount must be positive' }),
     __metadata("design:type", Number)
 ], CreatePropertyDto.prototype, "rentAmount", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)({ message: 'Description must be a string' }),
-    __metadata("design:type", String)
-], CreatePropertyDto.prototype, "description", void 0);
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreatePropertyDto.prototype, "bedrooms", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreatePropertyDto.prototype, "bathrooms", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(property_entity_1.PropertyStatus, {

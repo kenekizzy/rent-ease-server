@@ -5,13 +5,16 @@ import * as bcrypt from 'bcryptjs';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { NotificationPreference } from '../notifications/entities/notification-preferences.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+    @InjectRepository(NotificationPreference)
+    private readonly preferenceRepository: Repository<NotificationPreference>,
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     // Check if user already exists
@@ -33,10 +36,17 @@ export class UsersService {
       password: passwordHash,
     });
 
-    // Remove password from DTO before saving
-    delete (user as any).password;
+    // Remove password from object before returning (but keep it in entity for save)
+    const savedUser = await this.userRepository.save(user);
 
-    return await this.userRepository.save(user);
+    // Auto-create notification preferences
+    const preferences = this.preferenceRepository.create({
+      userId: savedUser.id,
+    });
+    await this.preferenceRepository.save(preferences);
+
+    delete (savedUser as any).password;
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {

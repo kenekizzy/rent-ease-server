@@ -18,8 +18,9 @@ const user_entity_1 = require("./users/entities/user.entity");
 const property_entity_1 = require("./properties/entities/property.entity");
 const lease_entity_1 = require("./lease/entities/lease.entity");
 const payment_entity_1 = require("./payments/entities/payment.entity");
-const complaint_entity_1 = require("./properties/entities/complaint.entity");
+const complaint_entity_1 = require("./complaints/entities/complaint.entity");
 const notification_entity_1 = require("./notifications/entities/notification.entity");
+const notification_preferences_entity_1 = require("./notifications/entities/notification-preferences.entity");
 const document_entity_1 = require("./files/entities/document.entity");
 const mailer_1 = require("@nestjs-modules/mailer");
 const files_module_1 = require("./files/files.module");
@@ -27,6 +28,7 @@ const properties_module_1 = require("./properties/properties.module");
 const lease_module_1 = require("./lease/lease.module");
 const complaints_module_1 = require("./complaints/complaints.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const payments_module_1 = require("./payments/payments.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -52,6 +54,7 @@ exports.AppModule = AppModule = __decorate([
                         payment_entity_1.Payment,
                         complaint_entity_1.Complaint,
                         notification_entity_1.AppNotification,
+                        notification_preferences_entity_1.NotificationPreference,
                         document_entity_1.Document,
                     ],
                     synchronize: configService.get('NODE_ENV') === 'development',
@@ -80,6 +83,7 @@ exports.AppModule = AppModule = __decorate([
             lease_module_1.LeaseModule,
             complaints_module_1.ComplaintsModule,
             notifications_module_1.NotificationsModule,
+            payments_module_1.PaymentsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

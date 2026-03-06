@@ -51,10 +51,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcryptjs"));
 const user_entity_1 = require("./entities/user.entity");
+const notification_preferences_entity_1 = require("../notifications/entities/notification-preferences.entity");
 let UsersService = class UsersService {
     userRepository;
-    constructor(userRepository) {
+    preferenceRepository;
+    constructor(userRepository, preferenceRepository) {
         this.userRepository = userRepository;
+        this.preferenceRepository = preferenceRepository;
     }
     async create(createUserDto) {
         const existingUser = await this.userRepository.findOne({
@@ -69,8 +72,13 @@ let UsersService = class UsersService {
             ...createUserDto,
             password: passwordHash,
         });
-        delete user.password;
-        return await this.userRepository.save(user);
+        const savedUser = await this.userRepository.save(user);
+        const preferences = this.preferenceRepository.create({
+            userId: savedUser.id,
+        });
+        await this.preferenceRepository.save(preferences);
+        delete savedUser.password;
+        return savedUser;
     }
     async findAll() {
         return await this.userRepository.find({
@@ -113,6 +121,8 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(notification_preferences_entity_1.NotificationPreference)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

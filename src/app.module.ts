@@ -13,8 +13,9 @@ import { User } from './users/entities/user.entity';
 import { Property } from './properties/entities/property.entity';
 import { Lease } from './lease/entities/lease.entity';
 import { Payment } from './payments/entities/payment.entity';
-import { Complaint } from './properties/entities/complaint.entity';
+import { Complaint } from './complaints/entities/complaint.entity';
 import { AppNotification } from './notifications/entities/notification.entity';
+import { NotificationPreference } from './notifications/entities/notification-preferences.entity';
 import { Document } from './files/entities/document.entity';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { FilesModule } from './files/files.module';
@@ -22,6 +23,7 @@ import { PropertiesModule } from './properties/properties.module';
 import { LeaseModule } from './lease/lease.module';
 import { ComplaintsModule } from './complaints/complaints.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -45,6 +47,7 @@ import { NotificationsModule } from './notifications/notifications.module';
           Payment,
           Complaint,
           AppNotification,
+          NotificationPreference,
           Document,
         ],
         synchronize: configService.get('NODE_ENV') === 'development',
@@ -73,6 +76,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     LeaseModule,
     ComplaintsModule,
     NotificationsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

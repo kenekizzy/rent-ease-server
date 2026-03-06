@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ComplaintQueryDto = void 0;
 const class_validator_1 = require("class-validator");
@@ -25,14 +26,14 @@ __decorate([
     (0, class_validator_1.IsEnum)(complaint_entity_1.ComplaintStatus, {
         message: 'Status must be open, in_progress, resolved, or closed',
     }),
-    __metadata("design:type", String)
+    __metadata("design:type", typeof (_a = typeof complaint_entity_1.ComplaintStatus !== "undefined" && complaint_entity_1.ComplaintStatus) === "function" ? _a : Object)
 ], ComplaintQueryDto.prototype, "status", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(complaint_entity_1.ComplaintPriority, {
         message: 'Priority must be low, medium, high, or urgent',
     }),
-    __metadata("design:type", String)
+    __metadata("design:type", typeof (_b = typeof complaint_entity_1.ComplaintPriority !== "undefined" && complaint_entity_1.ComplaintPriority) === "function" ? _b : Object)
 ], ComplaintQueryDto.prototype, "priority", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),

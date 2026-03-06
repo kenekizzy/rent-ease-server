@@ -21,6 +21,7 @@ exports.PropertiesModule = PropertiesModule = __decorate([
         imports: [typeorm_1.TypeOrmModule.forFeature([property_entity_1.Property]), auth_module_1.AuthModule],
         controllers: [properties_controller_1.PropertiesController],
         providers: [properties_service_1.PropertiesService],
+        exports: [properties_service_1.PropertiesService],
     })
 ], PropertiesModule);
 //# sourceMappingURL=properties.module.js.map

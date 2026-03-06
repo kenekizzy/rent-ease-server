@@ -24,11 +24,11 @@ export declare class Payment extends BaseEntity {
     paidDate: Date;
     status: PaymentStatus;
     paymentMethod: PaymentMethod;
-    transactionRef: string;
-    transactionDocument: string;
+    transactionRef?: string;
+    transactionDocument?: string;
     periodYear: number;
-    amountPaid: number;
-    notes: string;
+    amountPaid?: number;
+    notes?: string;
     lease: Lease;
     tenant: User;
     landlord: User;

@@ -1,10 +1,13 @@
-import { PropertyStatus } from '../entities/property.entity';
+import { PropertyStatus, PropertyType } from '../entities/property.entity';
 export declare class CreatePropertyDto {
-    address: string;
+    addressLine1: string;
+    addressLine2?: string;
     city: string;
     state: string;
     zipCode: string;
+    propertyType: PropertyType;
     rentAmount: number;
-    description?: string;
+    bedrooms?: number;
+    bathrooms?: number;
     status?: PropertyStatus;
 }

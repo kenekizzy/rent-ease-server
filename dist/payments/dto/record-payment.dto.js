@@ -15,8 +15,9 @@ const payment_entity_1 = require("../entities/payment.entity");
 class RecordPaymentDto {
     paidDate;
     paymentMethod;
+    transactionRef;
+    amountPaid;
     notes;
-    status;
 }
 exports.RecordPaymentDto = RecordPaymentDto;
 __decorate([
@@ -25,20 +26,24 @@ __decorate([
     __metadata("design:type", String)
 ], RecordPaymentDto.prototype, "paidDate", void 0);
 __decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)({ message: 'Payment method must be a string' }),
+    (0, class_validator_1.IsEnum)(payment_entity_1.PaymentMethod, { message: 'Invalid payment method' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Payment method is required' }),
     __metadata("design:type", String)
 ], RecordPaymentDto.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'Transaction reference must be a string' }),
+    __metadata("design:type", String)
+], RecordPaymentDto.prototype, "transactionRef", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    __metadata("design:type", Number)
+], RecordPaymentDto.prototype, "amountPaid", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)({ message: 'Notes must be a string' }),
     __metadata("design:type", String)
 ], RecordPaymentDto.prototype, "notes", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(payment_entity_1.PaymentStatus, {
-        message: 'Status must be pending, paid, or overdue',
-    }),
-    __metadata("design:type", String)
-], RecordPaymentDto.prototype, "status", void 0);
 //# sourceMappingURL=record-payment.dto.js.map

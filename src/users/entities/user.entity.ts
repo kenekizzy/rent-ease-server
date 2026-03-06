@@ -2,7 +2,7 @@ import { Entity, Column, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Property } from '../../properties/entities/property.entity';
 import { Lease } from '../../lease/entities/lease.entity';
-import { Complaint } from '../../properties/entities/complaint.entity';
+import { Complaint } from 'src/complaints/entities/complaint.entity';
 import { AppNotification } from '../../notifications/entities/notification.entity';
 import { NotificationPreference } from '../../notifications/entities/notification-preferences.entity';
 import { Payment } from 'src/payments/entities';

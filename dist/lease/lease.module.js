@@ -15,12 +15,13 @@ const lease_entity_1 = require("./entities/lease.entity");
 const auth_1 = require("../auth");
 const properties_module_1 = require("../properties/properties.module");
 const notifications_module_1 = require("../notifications/notifications.module");
+const users_module_1 = require("../users/users.module");
 let LeaseModule = class LeaseModule {
 };
 exports.LeaseModule = LeaseModule;
 exports.LeaseModule = LeaseModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([lease_entity_1.Lease]), auth_1.AuthModule, properties_module_1.PropertiesModule, notifications_module_1.NotificationsModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([lease_entity_1.Lease]), auth_1.AuthModule, properties_module_1.PropertiesModule, notifications_module_1.NotificationsModule, users_module_1.UsersModule],
         controllers: [lease_controller_1.LeaseController],
         providers: [lease_service_1.LeaseService],
         exports: [lease_service_1.LeaseService],

@@ -8,11 +8,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateComplaintDto = void 0;
 const mapped_types_1 = require("@nestjs/mapped-types");
 const class_validator_1 = require("class-validator");
-const create_complaint_dto_1 = require("./create-complaint.dto");
+const create_complaint_dto_1 = require("../../complaints/dto/create-complaint.dto");
 const complaint_entity_1 = require("../entities/complaint.entity");
 class UpdateComplaintDto extends (0, mapped_types_1.PartialType)(create_complaint_dto_1.CreateComplaintDto) {
     status;
@@ -23,6 +24,6 @@ __decorate([
     (0, class_validator_1.IsEnum)(complaint_entity_1.ComplaintStatus, {
         message: 'Status must be open, in_progress, resolved, or closed',
     }),
-    __metadata("design:type", String)
+    __metadata("design:type", typeof (_a = typeof complaint_entity_1.ComplaintStatus !== "undefined" && complaint_entity_1.ComplaintStatus) === "function" ? _a : Object)
 ], UpdateComplaintDto.prototype, "status", void 0);
 //# sourceMappingURL=update-complaint.dto.js.map

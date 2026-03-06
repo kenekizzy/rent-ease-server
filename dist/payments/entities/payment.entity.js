@@ -100,7 +100,7 @@ __decorate([
     __metadata("design:type", String)
 ], Payment.prototype, "transactionRef", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 50, name: 'transaction_document' }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50, name: 'transaction_document', nullable: true }),
     __metadata("design:type", String)
 ], Payment.prototype, "transactionDocument", void 0);
 __decorate([

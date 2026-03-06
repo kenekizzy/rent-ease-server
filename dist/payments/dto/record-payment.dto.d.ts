@@ -1,7 +1,8 @@
-import { PaymentStatus } from '../entities/payment.entity';
+import { PaymentMethod } from '../entities/payment.entity';
 export declare class RecordPaymentDto {
     paidDate: string;
-    paymentMethod?: string;
+    paymentMethod: PaymentMethod;
+    transactionRef?: string;
+    amountPaid?: number;
     notes?: string;
-    status?: PaymentStatus;
 }

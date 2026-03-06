@@ -18,9 +18,9 @@ __exportStar(require("./create-property.dto"), exports);
 __exportStar(require("./update-property.dto"), exports);
 __exportStar(require("./create-lease.dto"), exports);
 __exportStar(require("./update-lease.dto"), exports);
-__exportStar(require("./create-complaint.dto"), exports);
-__exportStar(require("./update-complaint.dto"), exports);
+__exportStar(require("../../complaints/dto/create-complaint.dto"), exports);
+__exportStar(require("../../complaints/dto/update-complaint.dto"), exports);
 __exportStar(require("./property-query.dto"), exports);
-__exportStar(require("./complaint-query.dto"), exports);
+__exportStar(require("../../complaints/dto/complaint-query.dto"), exports);
 __exportStar(require("./assign-tenant.dto"), exports);
 //# sourceMappingURL=index.js.map

@@ -62,10 +62,10 @@ export class Payment extends BaseEntity {
     name: 'transaction_ref',
     nullable: true,
   })
-  transactionRef: string;
+  transactionRef?: string;
 
-  @Column({ type: 'varchar', length: 50, name: 'transaction_document' })
-  transactionDocument: string;
+  @Column({ type: 'varchar', length: 50, name: 'transaction_document', nullable: true })
+  transactionDocument?: string;
 
   /** The rental year this payment covers e.g. 2025 */
   @Column({ type: 'int', name: 'period_year' })
@@ -76,10 +76,10 @@ export class Payment extends BaseEntity {
    * Null means no payment received yet.
    */
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'amount_paid', nullable: true })
-  amountPaid: number;
+  amountPaid?: number;
 
   @Column({ type: 'text', nullable: true })
-  notes: string;
+  notes?: string;
 
   // Relations
   @ManyToOne(() => Lease, (lease) => lease.payments)

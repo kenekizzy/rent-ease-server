@@ -14,7 +14,7 @@ const typeorm_1 = require("typeorm");
 const base_entity_1 = require("../../common/entities/base.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
 const lease_entity_1 = require("../../lease/entities/lease.entity");
-const complaint_entity_1 = require("./complaint.entity");
+const complaint_entity_1 = require("../../complaints/entities/complaint.entity");
 const document_entity_1 = require("../../files/entities/document.entity");
 var PropertyType;
 (function (PropertyType) {

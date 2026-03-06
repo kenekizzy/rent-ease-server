@@ -3,7 +3,7 @@ import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Property } from '../../properties/entities/property.entity';
 import { Payment } from '../../payments/entities/payment.entity';
-import { Complaint } from '../../properties/entities/complaint.entity';
+import { Complaint } from 'src/complaints/entities/complaint.entity';
 import { Document } from '../../files/entities/document.entity';
 
 export enum LeaseStatus {

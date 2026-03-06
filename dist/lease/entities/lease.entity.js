@@ -15,7 +15,7 @@ const base_entity_1 = require("../../common/entities/base.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
 const property_entity_1 = require("../../properties/entities/property.entity");
 const payment_entity_1 = require("../../payments/entities/payment.entity");
-const complaint_entity_1 = require("../../properties/entities/complaint.entity");
+const complaint_entity_1 = require("../../complaints/entities/complaint.entity");
 const document_entity_1 = require("../../files/entities/document.entity");
 var LeaseStatus;
 (function (LeaseStatus) {

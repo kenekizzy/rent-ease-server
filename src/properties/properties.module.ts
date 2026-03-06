@@ -9,5 +9,6 @@ import { AuthModule } from 'src/auth/auth.module';
   imports: [TypeOrmModule.forFeature([Property]), AuthModule],
   controllers: [PropertiesController],
   providers: [PropertiesService],
+  exports: [PropertiesService],
 })
-export class PropertiesModule {}
+export class PropertiesModule { }
