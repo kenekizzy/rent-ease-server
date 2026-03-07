@@ -50,7 +50,7 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<VerifyEmailDto> {
-    const decodedToken = await this.jwtService.verifyAsync(token);
+    const decodedToken = await this.sessionService.validateVerificationToken(token);
 
     const user = await this.usersService.findByEmail(decodedToken.email);
 

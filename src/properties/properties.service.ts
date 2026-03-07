@@ -5,15 +5,27 @@ import { Property } from './entities/property.entity';
 import { PropertyStatus } from './entities/property.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
+import { User } from 'src/users/entities';
+import { UserRole } from 'src/users/entities';
 
 @Injectable()
 export class PropertiesService {
-    constructor(
-        @InjectRepository(Property)
-        private readonly propertyRepository: Repository<Property>,
-    ) {}
+  constructor(
+    @InjectRepository(Property)
+    private readonly propertyRepository: Repository<Property>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) { }
 
-    async create(landlordId: string, dto: CreatePropertyDto): Promise<Property> {
+  async create(landlordId: string, dto: CreatePropertyDto): Promise<Property> {
+    const findUser = await this.userRepository.findOne({ where: { id: landlordId } });
+    if(!findUser){
+      throw new NotFoundException('User not found');
+    }
+
+    if(findUser.role !== UserRole.LANDLORD){
+      throw new ForbiddenException('You are not authorized to create this property');
+    }
     const property = this.propertyRepository.create({ ...dto, landlordId });
     return this.propertyRepository.save(property);
   }
@@ -55,8 +67,8 @@ export class PropertiesService {
   /** Summary stats for the landlord dashboard */
   async getOccupancySummary(landlordId: string) {
     const properties = await this.propertyRepository.find({ where: { landlordId } });
-    const total     = properties.length;
-    const occupied  = properties.filter((p) => p.status === PropertyStatus.OCCUPIED).length;
+    const total = properties.length;
+    const occupied = properties.filter((p) => p.status === PropertyStatus.OCCUPIED).length;
     const available = properties.filter((p) => p.status === PropertyStatus.AVAILABLE).length;
     const maintenance = properties.filter((p) => p.status === PropertyStatus.MAINTENANCE).length;
 

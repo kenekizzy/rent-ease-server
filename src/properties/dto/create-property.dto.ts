@@ -28,8 +28,8 @@ export class CreatePropertyDto {
   state: string;
 
   @IsString({ message: 'ZIP code must be a string' })
-  @Matches(/^\d{5}(-\d{4})?$/, {
-    message: 'ZIP code must be in format 12345 or 12345-6789',
+  @Matches(/^\d{6}(-\d{4})?$/, {
+    message: 'ZIP code must be in format 123456 or 123456-7890',
   })
   zipCode: string;
 

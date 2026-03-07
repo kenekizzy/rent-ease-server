@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../../users/entities/user.entity';
@@ -48,6 +48,20 @@ export class SessionService {
     };
   }
 
+  async validateVerificationToken(token: string): Promise<JwtPayload> {
+    if (!token) {
+      throw new UnauthorizedException('Verification token is required');
+    }
+
+    if (this.blacklistedTokens.has(token)) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const decodedToken = await this.jwtService.verifyAsync(token);
+
+    return decodedToken;
+  }
+
   async validateSession(token: string): Promise<boolean> {
     try {
       // Check if token is blacklisted
@@ -66,7 +80,7 @@ export class SessionService {
   async invalidateSession(token: string): Promise<void> {
     // Add token to blacklist
     this.blacklistedTokens.add(token);
-    
+
     // In production, you would store this in Redis with TTL
     // matching the token's remaining lifetime
   }

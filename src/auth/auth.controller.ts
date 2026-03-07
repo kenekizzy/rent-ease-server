@@ -25,7 +25,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionService: SessionService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('register')
@@ -36,7 +36,7 @@ export class AuthController {
   @Public()
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
-  async verifyEmail(@Body() token : string): Promise<VerifyEmailDto> {
+  async verifyEmail(@Body('token') token: string): Promise<VerifyEmailDto> {
     return await this.authService.verifyEmail(token);
   }
 
@@ -96,7 +96,7 @@ export class AuthController {
     if (!token) {
       return { valid: false };
     }
-    
+
     const isValid = await this.authService.validateSession(token);
     return { valid: isValid };
   }

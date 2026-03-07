@@ -30,17 +30,12 @@ export class Lease extends BaseEntity {
   @Column({ type: 'date', name: 'end_date' })
   endDate: Date;
 
-  /** Full yearly rent amount */
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'annual_rent' })
   annualRent: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'security_deposit' })
   securityDeposit: number;
 
-  /**
-   * The calendar date each year when rent is due.
-   * Defaults to the lease start_date (anniversary billing).
-   */
   @Column({ type: 'date', name: 'annual_due_date' })
   annualDueDate: Date;
 
@@ -54,7 +49,6 @@ export class Lease extends BaseEntity {
   @Column({ type: 'text', name: 'terms_text', nullable: true })
   termsText: string;
 
-  // Relations
   @ManyToOne(() => Property, (property) => property.leases)
   @JoinColumn({ name: 'property_id' })
   property: Property;

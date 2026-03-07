@@ -14,7 +14,7 @@ export class CustomValidationPipe extends NestValidationPipe {
         enableImplicitConversion: true,
       },
       exceptionFactory: (errors: ValidationError[]) => {
-        const formattedErrors = this.formatErrors(errors);
+        const formattedErrors = CustomValidationPipe.formatErrors(errors);
         return new BadRequestException({
           message: 'Validation failed',
           errors: formattedErrors,
@@ -24,8 +24,10 @@ export class CustomValidationPipe extends NestValidationPipe {
     });
   }
 
-  private formatErrors(errors: ValidationError[]): string[] {
-    const result: string[] = [];
+  private static formatErrors(
+    errors: ValidationError[],
+  ): Record<string, { value: unknown; messages: string[] }> {
+    const result: Record<string, { value: unknown; messages: string[] }> = {};
 
     const processError = (error: ValidationError, parentPath = '') => {
       const propertyPath = parentPath
@@ -33,15 +35,14 @@ export class CustomValidationPipe extends NestValidationPipe {
         : error.property;
 
       if (error.constraints) {
-        Object.values(error.constraints).forEach((constraint) => {
-          result.push(`${propertyPath}: ${constraint}`);
-        });
+        result[propertyPath] = {
+          value: error.value,
+          messages: Object.values(error.constraints),
+        };
       }
 
       if (error.children && error.children.length > 0) {
-        error.children.forEach((child) => {
-          processError(child, propertyPath);
-        });
+        error.children.forEach((child) => processError(child, propertyPath));
       }
     };
 

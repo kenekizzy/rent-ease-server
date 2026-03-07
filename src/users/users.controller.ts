@@ -40,7 +40,6 @@ export class UsersController {
   @Get(':id')
   @AllowSelfOrRoles(UserRole.LANDLORD)
   async findOne(@Param('id') id: string, @CurrentUser() currentUser: User): Promise<UserResponseDto> {
-    // Additional check for self-access
     if (currentUser.id !== id && currentUser.role !== UserRole.LANDLORD) {
       throw new ForbiddenException('You can only view your own profile');
     }
