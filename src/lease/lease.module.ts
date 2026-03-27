@@ -7,11 +7,13 @@ import { AuthModule } from 'src/auth';
 import { PropertiesModule } from 'src/properties/properties.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from 'src/users/users.module';
+import { MailerModule } from 'src/mailer/mailer.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Lease]), AuthModule, PropertiesModule, NotificationsModule, UsersModule],
+  imports: [TypeOrmModule.forFeature([Lease]), AuthModule, PropertiesModule, NotificationsModule, UsersModule, MailerModule],
   controllers: [LeaseController],
   providers: [LeaseService],
   exports: [LeaseService],
 })
 export class LeaseModule { }
+

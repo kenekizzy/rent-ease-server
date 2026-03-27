@@ -1,20 +1,25 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   UseGuards,
-  Request,
   HttpCode,
   HttpStatus,
   Headers,
+  Req,
+  Res,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { SessionService } from './services/session.service';
 import { LoginUserDto } from '../users/dto/login-user.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -47,28 +52,29 @@ export class AuthController {
     return await this.authService.login(loginUserDto);
   }
 
-  // @Public()
-  // @Get('google')
-  // @ApiOperation({ summary: 'Login with Google' })
-  // @ApiResponse({ status: 302, description: 'Redirect to Google OAuth' })
-  // @ApiResponse({ status: 500, description: 'Internal server error' })
-  // @UseGuards(GoogleAuthGuard)
-  // async googleAuth() {
-  //   // Initiates Google OAuth flow
-  // }
+   @Public()
+   @Get('google')
+   @UseGuards(GoogleAuthGuard)
+   async googleAuth() {
+      // Initiates Google OAuth flow
+   }
 
-  // @Public()
-  // @Get('google/callback')
-  // @ApiOperation({ summary: 'Google OAuth callback' })
-  // @ApiResponse({ status: 302, description: 'Redirect to frontend with tokens' })
-  // @ApiResponse({ status: 500, description: 'Internal server error' })
-  // @UseGuards(GoogleAuthGuard)
-  // async googleAuthCallback(@Req() req: any, @Res() res: Response) {
-  //   const result = await this.authService.oauthLogin(req.user);
-  //   // Redirect to frontend with tokens
-  //   const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
-  //   return res.redirect(redirectUrl);
-  // }
+   @Public()
+   @Get('google/callback')
+   @UseGuards(GoogleAuthGuard)
+   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
+     const result = await this.authService.oauthLogin(req.user);
+      // Redirect to frontend with tokens
+     const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+     return res.redirect(redirectUrl);
+   }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getProfile(@CurrentUser() user: User): Promise<UserResponseDto> {
+    return new UserResponseDto(user);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')

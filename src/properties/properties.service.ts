@@ -2,11 +2,12 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Property } from './entities/property.entity';
-import { PropertyStatus } from './entities/property.entity';
+import { PropertyStatus, PropertyType } from './entities/property.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { User } from 'src/users/entities';
 import { UserRole } from 'src/users/entities';
+import { LeaseStatus } from 'src/lease/entities/lease.entity';
 
 @Injectable()
 export class PropertiesService {
@@ -19,11 +20,10 @@ export class PropertiesService {
 
   async create(landlordId: string, dto: CreatePropertyDto): Promise<Property> {
     const findUser = await this.userRepository.findOne({ where: { id: landlordId } });
-    if(!findUser){
+    if (!findUser) {
       throw new NotFoundException('User not found');
     }
-
-    if(findUser.role !== UserRole.LANDLORD){
+    if (findUser.role !== UserRole.LANDLORD) {
       throw new ForbiddenException('You are not authorized to create this property');
     }
     const property = this.propertyRepository.create({ ...dto, landlordId });
@@ -64,23 +64,6 @@ export class PropertiesService {
     await this.propertyRepository.remove(property!);
   }
 
-  /** Summary stats for the landlord dashboard */
-  async getOccupancySummary(landlordId: string) {
-    const properties = await this.propertyRepository.find({ where: { landlordId } });
-    const total = properties.length;
-    const occupied = properties.filter((p) => p.status === PropertyStatus.OCCUPIED).length;
-    const available = properties.filter((p) => p.status === PropertyStatus.AVAILABLE).length;
-    const maintenance = properties.filter((p) => p.status === PropertyStatus.MAINTENANCE).length;
-
-    return {
-      total,
-      occupied,
-      available,
-      maintenance,
-      occupancyRate: total > 0 ? Math.round((occupied / total) * 100) : 0,
-    };
-  }
-
   // ── Internal helpers used by other services ──────────────────────────────
   async findById(id: string): Promise<Property> {
     const p = await this.propertyRepository.findOne({ where: { id } });
@@ -88,6 +71,76 @@ export class PropertiesService {
     return p;
   }
 
+  async getOccupancySummary(landlordId: string): Promise<any> {
+    const properties = await this.propertyRepository.find({
+      where: { landlordId },
+      relations: ['leases'],
+    });
+
+    const summary = properties.map((property) => {
+      const activeLeases = (property.leases ?? []).filter(
+        (l) => l.status === LeaseStatus.ACTIVE,
+      );
+
+      let occupancyRate = 0;
+      if (property.units?.length > 0) {
+        occupancyRate = (activeLeases.length / property.units.length) * 100;
+      } else {
+        occupancyRate = activeLeases.length > 0 ? 100 : 0;
+      }
+
+      return {
+        id: property.id,
+        address: property.addressLine1,
+        propertyType: property.propertyType,
+        totalUnits: property.units?.length || 1,
+        occupiedUnits: activeLeases.length,
+        occupancyRate,
+        status: property.status,
+      };
+    });
+
+    return summary;
+  }
+
+  /**
+   * Dynamically recompute a property's status based on its active leases.
+   * - HOUSE / CONDO / TOWNHOUSE: OCCUPIED if any active lease, else AVAILABLE.
+   * - APARTMENT / STUDIO / COMMERCIAL (with units): count active leases vs unit count.
+   */
+  async recomputeStatus(propertyId: string): Promise<void> {
+    const property = await this.propertyRepository.findOne({
+      where: { id: propertyId },
+      relations: ['leases'],
+    });
+    if (!property) return;
+
+    const activeLeases = (property.leases ?? []).filter(
+      (l) => l.status === LeaseStatus.ACTIVE,
+    );
+
+    let newStatus: PropertyStatus;
+
+    const unitTypes: PropertyType[] = [PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.COMMERCIAL];
+    if (unitTypes.includes(property.propertyType) && property.units?.length > 0) {
+      const totalUnits = property.units.length;
+      const occupiedUnits = activeLeases.length;
+      if (occupiedUnits === 0) {
+        newStatus = PropertyStatus.AVAILABLE;
+      } else if (occupiedUnits >= totalUnits) {
+        newStatus = PropertyStatus.OCCUPIED;
+      } else {
+        newStatus = PropertyStatus.PARTIALLY_OCCUPIED;
+      }
+    } else {
+      // Single-occupancy property types
+      newStatus = activeLeases.length > 0 ? PropertyStatus.OCCUPIED : PropertyStatus.AVAILABLE;
+    }
+
+    await this.propertyRepository.update(propertyId, { status: newStatus });
+  }
+
+  /** Explicit status override (e.g. MAINTENANCE) */
   async setStatus(id: string, status: PropertyStatus): Promise<void> {
     await this.propertyRepository.update(id, { status });
   }

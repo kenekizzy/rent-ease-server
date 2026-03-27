@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 
 export interface EmailOptions {
   to: string;
@@ -19,16 +20,46 @@ export interface WelcomeEmailData {
 
 @Injectable()
 export class EmailService {
-  constructor(private readonly mailerService: MailerService) {}
+  private resend: Resend;
+  private transporter: nodemailer.Transporter;
+
+  constructor() {
+    // this.resend = new Resend(process.env.RESEND_API_KEY || 're_123456789'); 
+    this.transporter = nodemailer.createTransport({
+      service: "Gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+  }
 
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
-      await this.mailerService.sendMail({
+      // const fromEmail = process.env.RESEND_FROM_EMAIL || 'Acme <onboarding@resend.dev>';
+
+      // const { data, error } = await this.resend.emails.send({
+      //   from: fromEmail,
+      //   to: options.to,
+      //   subject: options.subject,
+      //   html: options.html || '',
+      //   text: options.text,
+      // });
+
+      // if (error) {
+      //   console.error('Resend API error:', error);
+      //   throw new Error('Email sending failed');
+      // }
+
+      await this.transporter.sendMail({
+        from: process.env.NODEMAILER_USER,
         to: options.to,
         subject: options.subject,
-        html: options.html,
+        html: options.html || '',
         text: options.text,
-        context: options.context,
       });
     } catch (error) {
       console.error('Failed to send email:', error);
@@ -41,7 +72,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: data.email,
-      subject: 'Welcome to JobHuntly! 🎉',
+      subject: 'Welcome to RentEazy! 🎉',
       html,
     });
   }
@@ -59,6 +90,22 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: 'Verify Your Email Address',
+      html,
+    });
+  }
+
+  async sendInviteEmail(
+    email: string,
+    inviteLink: string,
+  ): Promise<void> {
+    const html = this.buildInviteEmailHtml(
+      email,
+      inviteLink,
+    );
+
+    await this.sendEmail({
+      to: email,
+      subject: 'You have been invited to sign a lease',
       html,
     });
   }
@@ -84,7 +131,7 @@ export class EmailService {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Welcome to Job Huntly</title>
+          <title>Welcome to RentEazy</title>
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -96,25 +143,18 @@ export class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to Job Huntly! 🎉</h1>
+              <h1>Welcome to RentEazy! 🎉</h1>
             </div>
             <div class="content">
               <h2>Hello ${data.firstName}!</h2>
-              <p>Welcome to Job Huntly, your trusted platform for searching for a job.</p>
-              <p>With Job Huntly, you can:</p>
+              <p>Welcome to RentEazy, your trusted platform for searching for managing rents and home complaints.</p>
+              <p>With RentEazy, you can:</p>
               <ul>
-                <li>Join and search for peer jobs</li>
-                <li>Get Notifications from your favourite companies</li>
-                <li>Follow up with recruiters for prospective job offers</li>
+                <li>Raise complaints and see real time follow through on the status of your complaints</li>
+                <li>Get Notifications prior to the expiration of your rent</li>
+                <li>As a landlord, you can manage your properties and tenants</li>
+                <li>As a tenant, you can manage your leases and payments</li>
               </ul>
-              ${
-                data.verificationLink
-                  ? `
-                <p>To get started, please verify your email address:</p>
-                <a href="${data.verificationLink}" class="button">Verify Email</a>
-              `
-                  : ''
-              }
               <p>Thank you for joining our community!</p>
               <p>Best regards,<br>The Erda Team</p>
             </div>
@@ -199,42 +239,31 @@ export class EmailService {
     `;
   }
 
-  private generateGroupStatusUpdateHtml(
-    memberName: string,
-    groupName: string,
-    status: string,
-    message: string,
-  ): string {
+  private buildInviteEmailHtml(address: string, inviteLink: string): string {
     return `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Group Status Update</title>
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #6366F1; color: white; padding: 20px; text-align: center; }
-            .content { padding: 20px; background: #f9f9f9; }
-            .status-update { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+            .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { padding: 24px; background: #f9f9f9; border-radius: 0 0 8px 8px; }
+            .button { display: inline-block; padding: 12px 28px; background: #4F46E5; color: white !important; text-decoration: none; border-radius: 6px; font-weight: bold; }
           </style>
         </head>
         <body>
           <div class="container">
-            <div class="header">
-              <h1>Group Status Update 📢</h1>
-            </div>
+            <div class="header"><h1>Rental Invitation 🏠</h1></div>
             <div class="content">
-              <h2>Hello ${memberName}!</h2>
-              <p>There's an important update regarding your group <strong>${groupName}</strong>.</p>
-              
-              <div class="status-update">
-                <h3>Status: ${status}</h3>
-                <p>${message}</p>
-              </div>
-              
-              <p>Please log in to your account for more details and any required actions.</p>
-              <p>Best regards,<br>The AjoConnect Team</p>
+              <p>You have been invited to sign a lease agreement for:</p>
+              <p><strong>${address}</strong></p>
+              <p>Click the button below to review the lease details and accept your invitation:</p>
+              <a href="${inviteLink}" class="button">View & Accept Invitation</a>
+              <p style="margin-top:24px; font-size:12px; color:#888;">
+                If you were not expecting this invitation, you can safely ignore this email.
+              </p>
             </div>
           </div>
         </body>

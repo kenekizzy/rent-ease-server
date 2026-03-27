@@ -16,7 +16,7 @@ export class SessionService {
     this.jwtExpiresIn = this.configService.get<string>('JWT_EXPIRES_IN') || '24h';
   }
 
-  async createSession(user: User): Promise<{ accessToken: string; expiresIn: number }> {
+  async createSession(user: User): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -24,10 +24,12 @@ export class SessionService {
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
+    const refreshToken = await this.jwtService.signAsync(payload, { expiresIn: '7d' });
     const expiresIn = this.getExpirationTime();
 
     return {
       accessToken,
+      refreshToken,
       expiresIn,
     };
   }
@@ -85,7 +87,7 @@ export class SessionService {
     // matching the token's remaining lifetime
   }
 
-  async refreshSession(user: User): Promise<{ accessToken: string; expiresIn: number }> {
+  async refreshSession(user: User): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
     return await this.createSession(user);
   }
 

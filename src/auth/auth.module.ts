@@ -8,6 +8,8 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AuthorizationGuard } from './guards/authorization.guard';
@@ -39,6 +41,8 @@ import { MailerModule } from 'src/mailer/mailer.module';
     LocalStrategy,
     JwtStrategy,
     JwtAuthGuard,
+    GoogleStrategy,
+    GoogleAuthGuard,
     RolesGuard,
     AuthorizationGuard,
   ],

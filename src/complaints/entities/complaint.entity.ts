@@ -1,8 +1,8 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
-import { Property } from 'src/properties/entities/property.entity';
-import { Lease } from 'src/lease/entities/lease.entity';
+import { Property } from '../../properties/entities/property.entity';
+import { Lease } from '../../lease/entities/lease.entity';
 
 export enum ComplaintPriority {
   LOW = 'low',

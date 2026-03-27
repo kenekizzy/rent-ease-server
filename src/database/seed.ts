@@ -27,11 +27,11 @@ async function seed() {
     const preferenceRepository = AppDataSource.getRepository(NotificationPreference);
 
     // Clear existing data (optional, but good for idempotent seeds)
-    // await complaintRepository.delete({});
-    // await leaseRepository.delete({});
-    // await propertyRepository.delete({});
-    // await preferenceRepository.delete({});
-    // await userRepository.delete({});
+    await complaintRepository.delete({});
+    await leaseRepository.delete({});
+    await propertyRepository.delete({});
+    await preferenceRepository.delete({});
+    await userRepository.delete({});
 
     const hashedPassword = await bcrypt.hash('Password123!', 10);
 
@@ -75,7 +75,7 @@ async function seed() {
     const propertiesData = [
         {
             addressLine1: '12 Lekki Phase 1',
-            addressLine2: 'Block B, Apt 4',
+            addressLine2: 'Block B',
             propertyType: PropertyType.APARTMENT,
             bedrooms: 3,
             bathrooms: 2,
@@ -86,6 +86,7 @@ async function seed() {
             state: 'Lagos',
             country: 'Nigeria',
             zipCode: '101001',
+            units: ['Apt 1', 'Apt 2', 'Apt 3', 'Apt 4'],
         },
         {
             addressLine1: '45 Garki Area 11',
@@ -100,6 +101,7 @@ async function seed() {
             state: 'Abuja',
             country: 'Nigeria',
             zipCode: '101021',
+            units: ['Suite A', 'Suite B', 'Suite C'],
         },
         {
             addressLine1: '8 Maitama District',

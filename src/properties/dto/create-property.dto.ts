@@ -7,6 +7,7 @@ import {
   Matches,
   IsEnum,
   Min,
+  IsArray,
 } from 'class-validator';
 import { PropertyStatus, PropertyType } from '../entities/property.entity';
 
@@ -54,7 +55,12 @@ export class CreatePropertyDto {
 
   @IsOptional()
   @IsEnum(PropertyStatus, {
-    message: 'Status must be available, occupied, or maintenance',
+    message: 'Status must be available, occupied, partially_occupied, or maintenance',
   })
   status?: PropertyStatus;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  units?: string[];
 }

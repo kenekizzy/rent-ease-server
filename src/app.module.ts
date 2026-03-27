@@ -17,7 +17,7 @@ import { Complaint } from './complaints/entities/complaint.entity';
 import { AppNotification } from './notifications/entities/notification.entity';
 import { NotificationPreference } from './notifications/entities/notification-preferences.entity';
 import { Document } from './files/entities/document.entity';
-import { MailerModule } from '@nestjs-modules/mailer';
+import { MailerModule } from './mailer/mailer.module';
 import { FilesModule } from './files/files.module';
 import { PropertiesModule } from './properties/properties.module';
 import { LeaseModule } from './lease/lease.module';
@@ -52,19 +52,6 @@ import { PaymentsModule } from './payments/payments.module';
         ],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
-      }),
-      inject: [ConfigService],
-    }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('EMAIL_HOST'),
-          auth: {
-            user: configService.get<string>('EMAIL_USERNAME'),
-            pass: configService.get<string>('EMAIL_PASSWORD'),
-          },
-        },
       }),
       inject: [ConfigService],
     }),

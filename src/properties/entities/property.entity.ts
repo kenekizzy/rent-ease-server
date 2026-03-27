@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Lease } from '../../lease/entities/lease.entity';
-import { Complaint } from 'src/complaints/entities/complaint.entity';
+import { Complaint } from '../../complaints/entities/complaint.entity';
 import { Document } from '../../files/entities/document.entity';
 
 export enum PropertyType {
@@ -16,6 +16,7 @@ export enum PropertyType {
 
 export enum PropertyStatus {
   AVAILABLE = 'available',
+  PARTIALLY_OCCUPIED = 'partially_occupied',
   OCCUPIED = 'occupied',
   MAINTENANCE = 'maintenance',
 }
@@ -42,6 +43,9 @@ export class Property extends BaseEntity {
 
   @Column({ type: 'enum', enum: PropertyType, name: 'property_type' })
   propertyType: PropertyType;
+
+  @Column('text', { array: true, default: [] })
+  units: string[];
 
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'rent_amount' })
   rentAmount: number;

@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lease, LeaseStatus } from './entities/lease.entity';
-import { PropertyStatus } from 'src/properties/entities/property.entity';
-import { CreateLeaseDto, UpdateLeaseDto, TerminateLeaseDto } from './dto/lease.dto';
+import { PropertyStatus, PropertyType } from 'src/properties/entities/property.entity';
+import { CreateLeaseDto, UpdateLeaseDto, TerminateLeaseDto, InviteLeaseDto, AcceptInviteDto } from './dto/lease.dto';
 import { UsersService } from 'src/users/users.service';
 import { PropertiesService } from 'src/properties/properties.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { EmailService } from '../mailer/mailer.service';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class LeaseService {
@@ -17,16 +19,39 @@ export class LeaseService {
     private readonly usersService: UsersService,
     private readonly propertiesService: PropertiesService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
   ) { }
 
   async create(landlordId: string, dto: CreateLeaseDto): Promise<Lease> {
     const property = await this.propertiesService.findById(dto.propertyId);
+
+    if(!property){
+      throw new NotFoundException('Property not found.');
+    }
+
+    const tenant = await this.usersService.findOne(dto.tenantId);
+
+    if(!tenant){
+      throw new NotFoundException('Tenant not found.');
+    }
 
     if (property.landlordId !== landlordId) {
       throw new ForbiddenException('You do not own this property.');
     }
     if (property.status === PropertyStatus.OCCUPIED) {
       throw new BadRequestException('Property is already occupied.');
+    }
+
+    const existingLease = await this.leaseRepository.findOne({
+      where: { propertyId: dto.propertyId, tenantId: dto.tenantId },
+    });
+
+    if(existingLease){
+      throw new BadRequestException('Lease already exists.');
+    }
+
+    if(property.rentAmount !== dto.annualRent){
+      throw new BadRequestException('Rent amount does not match property rent amount.');
     }
 
     const lease = this.leaseRepository.create({
@@ -37,8 +62,8 @@ export class LeaseService {
 
     const saved = await this.leaseRepository.save(lease);
 
-    // Mark property as occupied
-    await this.propertiesService.setStatus(dto.propertyId, PropertyStatus.OCCUPIED);
+    // Recompute property status
+    await this.propertiesService.recomputeStatus(dto.propertyId);
 
     // Notify tenant
     await this.notificationsService.send({
@@ -49,6 +74,84 @@ export class LeaseService {
       referenceId: saved.id,
       referenceType: 'lease',
     });
+
+    return saved;
+  }
+
+  async inviteTenant(landlordId: string, dto: InviteLeaseDto): Promise<Lease> {
+    const property = await this.propertiesService.findById(dto.propertyId);
+
+    if (property.landlordId !== landlordId) {
+      throw new ForbiddenException('You do not own this property.');
+    }
+
+    // For unit-based properties, validate the unit exists
+    const unitTypes = [PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.COMMERCIAL];
+    if (unitTypes.includes(property.propertyType) && dto.unit && property.units?.length > 0) {
+      if (!property.units.includes(dto.unit)) {
+        throw new BadRequestException(`Unit "${dto.unit}" does not exist in this property.`);
+      }
+      // Check if unit is already occupied
+      const existingUnitLease = await this.leaseRepository.findOne({
+        where: { propertyId: dto.propertyId, unit: dto.unit, status: LeaseStatus.ACTIVE },
+      });
+      if (existingUnitLease) {
+        throw new BadRequestException(`Unit "${dto.unit}" is already occupied.`);
+      }
+    }
+
+    const inviteToken = uuid();
+
+    const lease = this.leaseRepository.create({
+      propertyId: dto.propertyId,
+      tenantEmail: dto.tenantEmail,
+      unit: dto.unit,
+      landlordId,
+      startDate: new Date(dto.startDate),
+      endDate: new Date(dto.endDate),
+      annualRent: dto.annualRent,
+      securityDeposit: dto.securityDeposit,
+      annualDueDate: dto.annualDueDate ? new Date(dto.annualDueDate) : new Date(dto.startDate),
+      termsText: dto.termsText,
+      inviteToken,
+      status: LeaseStatus.PENDING_ACCEPTANCE,
+    });
+
+    const saved = await this.leaseRepository.save(lease);
+
+    // Send invitation email
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const inviteLink = `${frontendUrl}/accept-invite?token=${inviteToken}`;
+    const unitLabel = dto.unit ? ` (Unit ${dto.unit})` : '';
+
+    try {
+     this.emailService.sendInviteEmail(dto.tenantEmail, inviteLink);
+    } catch (err) {
+      console.error('Invite email failed to send:', err);
+    }
+
+    return saved;
+  }
+
+  async acceptInvite(tenantId: string, dto: AcceptInviteDto): Promise<Lease> {
+    const lease = await this.leaseRepository.findOne({
+      where: { inviteToken: dto.token, status: LeaseStatus.PENDING_ACCEPTANCE },
+      relations: ['property'],
+    });
+
+    if (!lease) {
+      throw new NotFoundException('Invalid or expired invite token.');
+    }
+
+    // Bind the tenant to this lease
+    lease.tenantId = tenantId;
+    lease.status = LeaseStatus.ACTIVE;
+    lease.inviteToken = undefined as unknown as string; // consume the token
+
+    const saved = await this.leaseRepository.save(lease);
+
+    // Recompute property occupancy
+    await this.propertiesService.recomputeStatus(lease.propertyId);
 
     return saved;
   }
@@ -126,20 +229,32 @@ export class LeaseService {
     lease!.endDate = new Date();
     const updated = await this.leaseRepository.save(lease!);
 
-    // Free up the property
-    await this.propertiesService.setStatus(lease!.propertyId, PropertyStatus.AVAILABLE);
+    // Recompute property status
+    await this.propertiesService.recomputeStatus(lease!.propertyId);
 
     // Notify tenant
-    await this.notificationsService.send({
-      userId: lease!.tenantId,
-      type: NotificationType.LEASE_TERMINATED,
-      title: 'Lease Terminated',
-      message: `Your lease has been terminated. Reason: ${dto.reason}`,
-      referenceId: id,
-      referenceType: 'lease',
-    });
+    if (lease!.tenantId) {
+      await this.notificationsService.send({
+        userId: lease!.tenantId,
+        type: NotificationType.LEASE_TERMINATED,
+        title: 'Lease Terminated',
+        message: `Your lease has been terminated. Reason: ${dto.reason}`,
+        referenceId: id,
+        referenceType: 'lease',
+      });
+    }
 
     return updated;
+  }
+
+  /** Look up a lease by an invite token — used by the frontend accept-invite page */
+  async findByInviteToken(token: string): Promise<Lease> {
+    const lease = await this.leaseRepository.findOne({
+      where: { inviteToken: token },
+      relations: ['property'],
+    });
+    if (!lease) throw new NotFoundException('Invalid or expired invite token.');
+    return lease;
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────

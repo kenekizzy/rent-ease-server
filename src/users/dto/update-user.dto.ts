@@ -34,4 +34,8 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
       'Password must contain at least one lowercase letter, one uppercase letter, and one number',
   })
   password?: string;
+
+  @IsOptional()
+  @IsString()
+  googleId?: string;
 }

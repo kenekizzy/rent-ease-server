@@ -26,9 +26,12 @@ export class UsersService {
       throw new ConflictException('User with this email already exists');
     }
 
-    // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(createUserDto.password, saltRounds);
+    // Hash password if provided
+    let passwordHash = '';
+    if (createUserDto.password) {
+      const saltRounds = 12;
+      passwordHash = await bcrypt.hash(createUserDto.password, saltRounds);
+    }
 
     // Create user entity
     const user = this.userRepository.create({

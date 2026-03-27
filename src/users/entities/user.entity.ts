@@ -2,11 +2,11 @@ import { Entity, Column, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Property } from '../../properties/entities/property.entity';
 import { Lease } from '../../lease/entities/lease.entity';
-import { Complaint } from 'src/complaints/entities/complaint.entity';
+import { Complaint } from '../../complaints/entities/complaint.entity';
 import { AppNotification } from '../../notifications/entities/notification.entity';
 import { NotificationPreference } from '../../notifications/entities/notification-preferences.entity';
-import { Payment } from 'src/payments/entities';
-import { Document } from 'src/files/entities';
+import { Payment } from '../../payments/entities/payment.entity';
+import { Document } from '../../files/entities/document.entity';
 
 export enum UserRole {
   LANDLORD = 'landlord',
@@ -19,7 +19,10 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'password' })
+  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  googleId: string;
+
+  @Column({ type: 'varchar', length: 255, name: 'password', nullable: true })
   password: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

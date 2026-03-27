@@ -7,6 +7,8 @@ export class UserResponseDto {
   firstName: string;
   lastName: string;
   phone?: string;
+  avatar?: string;
+  googleId?: string;
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;

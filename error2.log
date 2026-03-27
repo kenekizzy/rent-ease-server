@@ -1,0 +1,36 @@
+[dotenv@17.3.1] injecting env (9) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[90m[4mquery:[24m[39m [94mSELECT[0m [95mversion[0m[37m([0m[37m)[0m
+[90m[4mquery:[24m[39m [94mSELECT[0m [37m*[0m [94mFROM[0m [95mcurrent_schema[0m[37m([0m[37m)[0m
+[30m[41mError during migration generation:[49m[39m
+Error: Cannot find module 'src/complaints/entities/complaint.entity'
+Require stack:
+- C:\Users\Kizito\Documents\projects\test\backend\src\lease\entities\lease.entity.ts
+- C:\Users\Kizito\Documents\projects\test\backend\src\properties\entities\property.entity.ts
+- C:\Users\Kizito\Documents\projects\test\backend\src\users\entities\user.entity.ts
+- C:\Users\Kizito\Documents\projects\test\backend\node_modules\typeorm\util\ImportUtils.js
+- C:\Users\Kizito\Documents\projects\test\backend\node_modules\typeorm\commands\CommandUtils.js
+- C:\Users\Kizito\Documents\projects\test\backend\node_modules\typeorm\commands\SchemaSyncCommand.js
+- C:\Users\Kizito\Documents\projects\test\backend\node_modules\typeorm\cli.js
+- C:\Users\Kizito\Documents\projects\test\backend\node_modules\typeorm\cli-ts-node-commonjs.js
+    at Function.<anonymous> (node:internal/modules/cjs/loader:1401:15)
+    at Function.Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (C:\Users\Kizito\Documents\projects\test\backend\node_modules\@cspotcode\source-map-support\source-map-support.js:811:30)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (C:\Users\Kizito\Documents\projects\test\backend\src\lease\entities\lease.entity.ts:6:1) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\src\\lease\\entities\\lease.entity.ts',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\src\\properties\\entities\\property.entity.ts',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\src\\users\\entities\\user.entity.ts',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\node_modules\\typeorm\\util\\ImportUtils.js',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\node_modules\\typeorm\\commands\\CommandUtils.js',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\node_modules\\typeorm\\commands\\SchemaSyncCommand.js',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\node_modules\\typeorm\\cli.js',
+    'C:\\Users\\Kizito\\Documents\\projects\\test\\backend\\node_modules\\typeorm\\cli-ts-node-commonjs.js'
+  ]
+}

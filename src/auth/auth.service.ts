@@ -23,7 +23,7 @@ export class AuthService {
   ) {}
 
   async register(createUserDto: CreateUserDto): Promise<AuthResponseDto> {
-    const clientUrl = this.configService.get<string>('CLIENT_URL');
+    const clientUrl = process.env.CLIENT_URL;
     
     const existingUser = await this.usersService.findByEmail(createUserDto.email);
       if (existingUser && existingUser.role === createUserDto.role) {
@@ -33,15 +33,14 @@ export class AuthService {
       const session = await this.sessionService.createSession(user);
       const token = await this.sessionService.createVerificationToken(user);
 
-      const verificationLink = `${clientUrl}/verify-me/token=${token.token}`;
-      console.log("Verification Link: ", verificationLink);
+      const verificationLink = `${clientUrl}/verify-email?token=${token.token}`;
 
-      // Pause the email sending for now
-      // await this.emailService.sendEmailVerification(
-      //   user.email,
-      //   user.firstName,
-      //   verificationLink,
-      // );
+      //Pause the email sending service 
+      await this.emailService.sendEmailVerification(
+         user.email,
+         user.firstName,
+         verificationLink,
+       );
 
       
       return new AuthResponseDto(
@@ -62,10 +61,10 @@ export class AuthService {
       emailVerified: true,
     });
 
-    // await this.emailService.sendWelcomeEmail({
-    //   firstName: user.firstName,
-    //   email: user.email,
-    // });
+     await this.emailService.sendWelcomeEmail({
+       firstName: user.firstName,
+       email: user.email,
+     });
 
     return new VerifyEmailDto('Email verification successful');
   }
@@ -77,6 +76,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if(user.role !== loginUserDto.role) {
+      throw new UnauthorizedException('Invalid role');
+    }
+
     const session = await this.sessionService.createSession(user);
     
     return new AuthResponseDto(
@@ -85,10 +88,66 @@ export class AuthService {
     );
   }
 
+  async oauthLogin(googleUser: any) {
+    if (!googleUser) {
+      throw new BadRequestException('Unauthenticated');
+    }
+
+    const user = await this.validateGoogleUser(googleUser);
+
+    const session = await this.sessionService.createSession(user);
+
+    return {
+      user: new UserResponseDto(user),
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken || '',
+    };
+  }
+
+  async validateGoogleUser(googleData: any): Promise<User> {
+    const { email, googleId, firstName, lastName, picture } = googleData;
+
+    const existingUser = await this.usersService.findByEmail(email);
+
+    if (existingUser) {
+      if (!existingUser.googleId) {
+        // Link Google ID to existing email account
+        await this.usersService.update(existingUser.id, {
+          googleId,
+          avatar: existingUser.avatar || picture,
+        });
+        return await this.usersService.findOne(existingUser.id);
+      }
+      return existingUser;
+    }
+
+    // Create new user (defaulting to TENANT for safety)
+    const newUser = await this.usersService.create({
+      email,
+      firstName,
+      lastName,
+      avatar: picture,
+      googleId,
+      role: 'tenant' as any,
+      password: '',
+    } as any);
+
+    await this.usersService.update(newUser.id, {
+      emailVerified: true,
+    });
+
+    await this.emailService.sendWelcomeEmail({
+      firstName: newUser.firstName,
+      email: newUser.email,
+    });
+
+    return await this.usersService.findOne(newUser.id);
+  }
+
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersService.findByEmail(email);
     
-    if (!user) {
+    if (!user || !user.password) {
       return null;
     }
 
@@ -109,10 +168,11 @@ export class AuthService {
     }
   }
 
-  async generateTokens(user: User): Promise<{ accessToken: string }> {
+  async generateTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {
     const session = await this.sessionService.createSession(user);
     return {
       accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
     };
   }
 

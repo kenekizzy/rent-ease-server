@@ -14,13 +14,22 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Email is required' })
   email: string;
 
+  @IsOptional()
   @IsString({ message: 'Password must be a string' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message:
       'Password must contain at least one lowercase letter, one uppercase letter, and one number',
   })
-  password: string;
+  password?: string;
+
+  @IsOptional()
+  @IsString()
+  googleId?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
 
   @IsString({ message: 'First name must be a string' })
   @IsNotEmpty({ message: 'First name is required' })
