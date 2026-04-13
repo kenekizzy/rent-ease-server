@@ -1,10 +1,11 @@
-import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Check } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Check, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Property } from '../../properties/entities/property.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Complaint } from '../../complaints/entities/complaint.entity';
 import { Document } from '../../files/entities/document.entity';
+import { PropertyUnit } from '../../properties/entities/property-unit.entity';
 
 export enum LeaseStatus {
   PENDING_ACCEPTANCE = 'pending_acceptance',
@@ -13,11 +14,22 @@ export enum LeaseStatus {
   TERMINATED = 'terminated',
 }
 
+export enum DepositStatus {
+  PENDING = 'pending',
+  COLLECTED = 'collected',
+  PARTIALLY_REFUNDED = 'partially_refunded',
+  REFUNDED = 'refunded',
+  FORFEITED = 'forfeited',
+}
+
 @Entity('leases')
 @Check(`"end_date" > "start_date"`)
 export class Lease extends BaseEntity {
   @Column({ type: 'uuid', name: 'property_id' })
   propertyId: string;
+
+  @Column({ type: 'uuid', name: 'unit_id', nullable: true })
+  unitId?: string;
 
   @Column({ type: 'uuid', name: 'tenant_id', nullable: true })
   tenantId: string;
@@ -28,8 +40,9 @@ export class Lease extends BaseEntity {
   @Column({ type: 'varchar', length: 255, name: 'invite_token', nullable: true })
   inviteToken: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  unit: string;
+  @OneToOne('PropertyUnit', (unit: PropertyUnit) => unit.activeLease, { nullable: true })
+  @JoinColumn({ name: 'unit_id' })
+  unit?: PropertyUnit;
 
   @Column({ type: 'uuid', name: 'landlord_id' })
   landlordId: string;
@@ -55,6 +68,15 @@ export class Lease extends BaseEntity {
     default: LeaseStatus.ACTIVE,
   })
   status: LeaseStatus;
+
+  @Column({ type: 'timestamptz', nullable: true, name: 'accepted_at' })
+  acceptedAt?: Date;
+
+  @Column({ type: 'timestamptz', nullable: true, name: 'terminated_at' })
+  terminatedAt?: Date;
+ 
+  @Column({ type: 'text', nullable: true, name: 'termination_reason' })
+  terminationReason?: string;
 
   @Column({ type: 'text', name: 'terms_text', nullable: true })
   termsText: string;

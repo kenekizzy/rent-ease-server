@@ -2,7 +2,7 @@ import {
   Controller, Post, Get, Put, Delete, Param, Body, UseGuards, Request, HttpCode, HttpStatus
 } from '@nestjs/common';
 import { LeaseService } from './lease.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateLeaseDto, UpdateLeaseDto, TerminateLeaseDto, InviteLeaseDto, AcceptInviteDto } from './dto/lease.dto';
 
 @UseGuards(JwtAuthGuard)
@@ -10,13 +10,11 @@ import { CreateLeaseDto, UpdateLeaseDto, TerminateLeaseDto, InviteLeaseDto, Acce
 export class LeaseController {
   constructor(private readonly leaseService: LeaseService) { }
 
-  /** Landlord: create a lease directly (tenant already registered) */
   @Post()
   create(@Request() req: any, @Body() dto: CreateLeaseDto) {
     return this.leaseService.create(req.user.id, dto);
   }
 
-  /** Landlord: invite a tenant by email */
   @Post('invite')
   inviteTenant(@Request() req: any, @Body() dto: InviteLeaseDto) {
     return this.leaseService.inviteTenant(req.user.id, dto);

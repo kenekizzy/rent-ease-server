@@ -1,5 +1,5 @@
 import { IsOptional, IsEnum, IsString, IsUUID } from 'class-validator';
-import { PropertyStatus } from '../entities/property.entity';
+import { PropertyStatus } from '../entities/property.enum';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class PropertyQueryDto extends PaginationDto {

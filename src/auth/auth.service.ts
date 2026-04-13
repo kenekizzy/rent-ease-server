@@ -9,7 +9,7 @@ import { VerifyEmailDto } from './dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { User } from '../users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from 'src/mailer/mailer.service';
+import { EmailService } from '../mailer/mailer.service';
 import { JwtPayload } from './interfaces/auth.interface';
 
 @Injectable()
@@ -121,14 +121,14 @@ export class AuthService {
       return existingUser;
     }
 
-    // Create new user (defaulting to TENANT for safety)
+    // Create new user with UNDETERMINED role to force selection
     const newUser = await this.usersService.create({
       email,
       firstName,
       lastName,
       avatar: picture,
       googleId,
-      role: 'tenant' as any,
+      role: 'undetermined' as any,
       password: '',
     } as any);
 
@@ -193,5 +193,24 @@ export class AuthService {
 
   async validateSession(token: string): Promise<boolean> {
     return await this.sessionService.validateSession(token);
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    // Return silently if user not found — no enumeration
+    if (!user) {
+      return;
+    }
+
+    const clientUrl = process.env.CLIENT_URL;
+    const token = this.sessionService.createResetToken(user.id.toString(), user.email);
+    const resetLink = `${clientUrl}/reset-password?token=${token}`;
+
+    await this.emailService.sendPasswordReset(user.email, user.firstName, resetLink);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const { userId } = this.sessionService.validateResetToken(token);
+    await this.usersService.update(userId, { password: newPassword });
   }
 }

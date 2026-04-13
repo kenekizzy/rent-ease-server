@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../../users/entities/user.entity';
@@ -8,6 +9,7 @@ import { JwtPayload, AuthenticatedUser } from '../interfaces/auth.interface';
 export class SessionService {
   private readonly jwtExpiresIn: string;
   private readonly blacklistedTokens = new Set<string>(); // In production, use Redis
+  private readonly resetTokens = new Map<string, { userId: string; email: string; expiresAt: Date }>();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -106,6 +108,26 @@ export class SessionService {
       firstName: user.firstName,
       lastName: user.lastName,
     };
+  }
+
+  createResetToken(userId: string, email: string): string {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    this.resetTokens.set(token, { userId, email, expiresAt });
+    return token;
+  }
+
+  validateResetToken(token: string): { userId: string; email: string } {
+    const entry = this.resetTokens.get(token);
+    if (!entry) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+    if (entry.expiresAt < new Date()) {
+      this.resetTokens.delete(token);
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+    this.resetTokens.delete(token);
+    return { userId: entry.userId, email: entry.email };
   }
 
   private getExpirationTime(): number {

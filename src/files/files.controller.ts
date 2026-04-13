@@ -2,7 +2,7 @@ import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, HttpCode, H
 import { FilesService } from './files.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateDocumentDto } from './dto/create-document.dto';
-import { JwtAuthGuard } from 'src/auth';
+import { JwtAuthGuard } from '../auth';
 import type { Response } from 'express';
 import * as fs from 'fs';
 import { memoryStorage } from 'multer';

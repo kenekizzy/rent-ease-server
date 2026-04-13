@@ -2,10 +2,10 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lease, LeaseStatus } from './entities/lease.entity';
-import { PropertyStatus, PropertyType } from 'src/properties/entities/property.entity';
+import { PropertyStatus, PropertyType } from '../properties/entities/property.enum';
 import { CreateLeaseDto, UpdateLeaseDto, TerminateLeaseDto, InviteLeaseDto, AcceptInviteDto } from './dto/lease.dto';
-import { UsersService } from 'src/users/users.service';
-import { PropertiesService } from 'src/properties/properties.service';
+import { UsersService } from '../users/users.service';
+import { PropertiesService } from '../properties/properties.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { EmailService } from '../mailer/mailer.service';
@@ -23,7 +23,7 @@ export class LeaseService {
   ) { }
 
   async create(landlordId: string, dto: CreateLeaseDto): Promise<Lease> {
-    const property = await this.propertiesService.findById(dto.propertyId);
+    const property = await this.propertiesService.findById(dto.propertyId, true);
 
     if(!property){
       throw new NotFoundException('Property not found.');
@@ -38,20 +38,62 @@ export class LeaseService {
     if (property.landlordId !== landlordId) {
       throw new ForbiddenException('You do not own this property.');
     }
-    if (property.status === PropertyStatus.OCCUPIED) {
+    const unitTypes = [PropertyType.APARTMENT, PropertyType.STUDIO];
+    const isUnitBased = unitTypes.includes(property.propertyType) && property.units?.length > 0;
+
+    if (isUnitBased && !dto.unitId) {
+      throw new BadRequestException('This property has multiple units. Please select a unit.');
+    }
+    const unit = isUnitBased ? property.units.find(u => u.id === dto.unitId) : null;
+    if (isUnitBased && !unit) {
+      throw new BadRequestException('Selected unit not found in this property.');
+    }
+
+    if (!isUnitBased && property.status === PropertyStatus.OCCUPIED) {
       throw new BadRequestException('Property is already occupied.');
     }
 
+    if(property.propertyType === PropertyType.HOUSE && (property.status === PropertyStatus.OCCUPIED || property.status === PropertyStatus.PARTIALLY_OCCUPIED)){
+      throw new BadRequestException('Property is already occupied.');
+    }
+
+    if((property.propertyType === PropertyType.APARTMENT || property.propertyType === PropertyType.STUDIO) && property.status === PropertyStatus.OCCUPIED){
+      throw new BadRequestException('Property is already occupied.');
+    }
+
+    if((property.propertyType === PropertyType.APARTMENT || property.propertyType === PropertyType.STUDIO) && !dto.unitId && dto.annualRent){
+      throw new BadRequestException('Please select a unit.');
+    }
+
     const existingLease = await this.leaseRepository.findOne({
-      where: { propertyId: dto.propertyId, tenantId: dto.tenantId },
+      where: { propertyId: dto.propertyId, tenantId: dto.tenantId, status: LeaseStatus.ACTIVE },
     });
 
     if(existingLease){
-      throw new BadRequestException('Lease already exists.');
+      throw new BadRequestException('Tenant already has an active lease in this property.');
     }
 
-    if(property.rentAmount !== dto.annualRent){
-      throw new BadRequestException('Rent amount does not match property rent amount.');
+    let expectedRent = property.rentAmount;
+    if (isUnitBased && dto.unitId) {
+      const unitData = property.units.find((u) => u.id === dto.unitId);
+      if (!unitData) {
+        throw new BadRequestException(`Unit with ID "${dto.unitId}" does not exist in this property.`);
+      }
+
+      const existingUnitLease = await this.leaseRepository.findOne({
+        where: { unitId: dto.unitId, status: LeaseStatus.ACTIVE },
+      });
+      if (existingUnitLease) {
+        throw new BadRequestException(`Unit "${unitData.name}" is already occupied.`);
+      }
+
+      if (unitData.rentAmount !== undefined) {
+        expectedRent = Math.trunc(unitData.rentAmount);
+      }
+    }
+
+    if (expectedRent !== undefined && expectedRent !== dto.annualRent) {
+      throw new BadRequestException(`Rent amount does not match expected rent amount (₦${expectedRent}).`);
     }
 
     const lease = this.leaseRepository.create({
@@ -79,24 +121,35 @@ export class LeaseService {
   }
 
   async inviteTenant(landlordId: string, dto: InviteLeaseDto): Promise<Lease> {
-    const property = await this.propertiesService.findById(dto.propertyId);
+    const property = await this.propertiesService.findById(dto.propertyId, true);
 
     if (property.landlordId !== landlordId) {
       throw new ForbiddenException('You do not own this property.');
     }
 
-    // For unit-based properties, validate the unit exists
-    const unitTypes = [PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.COMMERCIAL];
-    if (unitTypes.includes(property.propertyType) && dto.unit && property.units?.length > 0) {
-      if (!property.units.includes(dto.unit)) {
-        throw new BadRequestException(`Unit "${dto.unit}" does not exist in this property.`);
+    const unitTypes = [PropertyType.APARTMENT, PropertyType.STUDIO];
+    const isUnitBased = unitTypes.includes(property.propertyType) && property.units?.length > 0;
+
+    if (isUnitBased && !dto.unitId) {
+      throw new BadRequestException('This property has multiple units. Please select a unit.');
+    }
+
+    if (!isUnitBased && property.status === PropertyStatus.OCCUPIED) {
+      throw new BadRequestException('Property is already occupied.');
+    }
+
+    // For unit-based properties, validate the unit exists and is empty
+    if (isUnitBased && dto.unitId) {
+      const unit = property.units.find((u) => u.id === dto.unitId);
+      if (!unit) {
+        throw new BadRequestException(`Unit with ID "${dto.unitId}" does not exist in this property.`);
       }
       // Check if unit is already occupied
       const existingUnitLease = await this.leaseRepository.findOne({
-        where: { propertyId: dto.propertyId, unit: dto.unit, status: LeaseStatus.ACTIVE },
+        where: { unitId: dto.unitId, status: LeaseStatus.ACTIVE },
       });
       if (existingUnitLease) {
-        throw new BadRequestException(`Unit "${dto.unit}" is already occupied.`);
+        throw new BadRequestException(`Unit "${unit.name}" is already occupied.`);
       }
     }
 
@@ -105,7 +158,7 @@ export class LeaseService {
     const lease = this.leaseRepository.create({
       propertyId: dto.propertyId,
       tenantEmail: dto.tenantEmail,
-      unit: dto.unit,
+      unitId: dto.unitId,
       landlordId,
       startDate: new Date(dto.startDate),
       endDate: new Date(dto.endDate),
@@ -122,7 +175,6 @@ export class LeaseService {
     // Send invitation email
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const inviteLink = `${frontendUrl}/accept-invite?token=${inviteToken}`;
-    const unitLabel = dto.unit ? ` (Unit ${dto.unit})` : '';
 
     try {
      this.emailService.sendInviteEmail(dto.tenantEmail, inviteLink);
@@ -167,7 +219,7 @@ export class LeaseService {
   async findAllForTenant(tenantId: string): Promise<Lease[]> {
     return this.leaseRepository.find({
       where: { tenantId },
-      relations: ['property', 'landlord'],
+      relations: ['property', 'landlord', 'unit'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -175,7 +227,7 @@ export class LeaseService {
   async findOne(id: string, userId: string): Promise<Lease> {
     const lease = await this.leaseRepository.findOne({
       where: { id },
-      relations: ['tenant', 'landlord', 'property', 'paymentRecords', 'documents'],
+      relations: ['tenant', 'landlord', 'property', 'unit', 'payments', 'documents'],
     });
 
     this.assertExists(lease);
@@ -251,10 +303,21 @@ export class LeaseService {
   async findByInviteToken(token: string): Promise<Lease> {
     const lease = await this.leaseRepository.findOne({
       where: { inviteToken: token },
-      relations: ['property'],
+      relations: ['property', 'unit'],
     });
     if (!lease) throw new NotFoundException('Invalid or expired invite token.');
     return lease;
+  }
+
+  async findPendingInvitationsByEmail(email: string): Promise<Lease[]> {
+    return this.leaseRepository.find({
+      where: { 
+        tenantEmail: email, 
+        status: LeaseStatus.PENDING_ACCEPTANCE 
+      },
+      relations: ['property', 'unit', 'landlord'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────

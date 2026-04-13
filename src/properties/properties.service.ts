@@ -2,12 +2,12 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Property } from './entities/property.entity';
-import { PropertyStatus, PropertyType } from './entities/property.entity';
+import { PropertyStatus, PropertyType } from './entities/property.enum';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
-import { User } from 'src/users/entities';
-import { UserRole } from 'src/users/entities';
-import { LeaseStatus } from 'src/lease/entities/lease.entity';
+import { User } from '../users/entities';
+import { UserRole } from '../users/entities';
+import { LeaseStatus } from '../lease/entities/lease.entity';
 
 @Injectable()
 export class PropertiesService {
@@ -33,6 +33,7 @@ export class PropertiesService {
   async findAll(landlordId: string): Promise<Property[]> {
     return this.propertyRepository.find({
       where: { landlordId },
+      relations: ['units', 'leases', 'leases.tenant'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -65,8 +66,11 @@ export class PropertiesService {
   }
 
   // ── Internal helpers used by other services ──────────────────────────────
-  async findById(id: string): Promise<Property> {
-    const p = await this.propertyRepository.findOne({ where: { id } });
+  async findById(id: string, loadUnits = false): Promise<Property> {
+    const p = await this.propertyRepository.findOne({
+      where: { id },
+      relations: loadUnits ? ['units'] : [],
+    });
     if (!p) throw new NotFoundException('Property not found.');
     return p;
   }
@@ -74,7 +78,7 @@ export class PropertiesService {
   async getOccupancySummary(landlordId: string): Promise<any> {
     const properties = await this.propertyRepository.find({
       where: { landlordId },
-      relations: ['leases'],
+      relations: ['leases', 'units'],
     });
 
     const summary = properties.map((property) => {
@@ -103,15 +107,10 @@ export class PropertiesService {
     return summary;
   }
 
-  /**
-   * Dynamically recompute a property's status based on its active leases.
-   * - HOUSE / CONDO / TOWNHOUSE: OCCUPIED if any active lease, else AVAILABLE.
-   * - APARTMENT / STUDIO / COMMERCIAL (with units): count active leases vs unit count.
-   */
   async recomputeStatus(propertyId: string): Promise<void> {
     const property = await this.propertyRepository.findOne({
       where: { id: propertyId },
-      relations: ['leases'],
+      relations: ['leases', 'units'],
     });
     if (!property) return;
 
@@ -121,7 +120,7 @@ export class PropertiesService {
 
     let newStatus: PropertyStatus;
 
-    const unitTypes: PropertyType[] = [PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.COMMERCIAL];
+    const unitTypes: PropertyType[] = [PropertyType.APARTMENT, PropertyType.STUDIO];
     if (unitTypes.includes(property.propertyType) && property.units?.length > 0) {
       const totalUnits = property.units.length;
       const occupiedUnits = activeLeases.length;
@@ -143,6 +142,14 @@ export class PropertiesService {
   /** Explicit status override (e.g. MAINTENANCE) */
   async setStatus(id: string, status: PropertyStatus): Promise<void> {
     await this.propertyRepository.update(id, { status });
+  }
+
+  async findLeasedProperties(tenantId: string): Promise<Property[]> {
+    return this.propertyRepository.createQueryBuilder('property')
+      .innerJoin('property.leases', 'lease')
+      .where('lease.tenantId = :tenantId', { tenantId })
+      .andWhere('lease.status = :status', { status: LeaseStatus.ACTIVE })
+      .getMany();
   }
 
   private assertExists(p: Property | null) {

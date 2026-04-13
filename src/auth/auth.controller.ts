@@ -18,6 +18,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -105,5 +106,21 @@ export class AuthController {
 
     const isValid = await this.authService.validateSession(token);
     return { valid: isValid };
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body('email') email: string): Promise<{ message: string }> {
+    await this.authService.forgotPassword(email);
+    return { message: 'If that email address is in our system, you will receive a password reset link shortly.' };
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    await this.authService.resetPassword(dto.token, dto.newPassword);
+    return { message: 'Password has been reset successfully.' };
   }
 }

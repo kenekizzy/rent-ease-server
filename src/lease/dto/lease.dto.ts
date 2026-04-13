@@ -8,8 +8,10 @@ import {
   IsPositive,
   IsString,
   IsUUID,
+  IsDate,
 } from 'class-validator';
 import { LeaseStatus } from '../entities/lease.entity';
+import { Transform, Type } from 'class-transformer';
 
 export class InviteLeaseDto {
   @IsUUID()
@@ -19,8 +21,8 @@ export class InviteLeaseDto {
   tenantEmail: string;
 
   @IsOptional()
-  @IsString()
-  unit?: string;
+  @IsUUID()
+  unitId?: string;
 
   @IsDateString()
   startDate: string;
@@ -58,6 +60,18 @@ export class CreateLeaseDto {
   @IsUUID()
   tenantId: string;
 
+  @IsOptional()
+  @IsUUID()
+  unitId?: string;
+
+  @IsOptional()
+  @IsEmail()
+  tenantEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  inviteToken?: string;
+
   @IsDateString()
   startDate: string;
 
@@ -79,6 +93,26 @@ export class CreateLeaseDto {
   @IsOptional()
   @IsString()
   termsText?: string;
+
+  @IsOptional()
+  @IsEnum(LeaseStatus)
+  status?: LeaseStatus;
+
+  @IsOptional()
+  @Transform(({ value }) => value?.value ?? value)
+  @Type(() => Date)
+  @IsDate()
+  acceptedAt?: Date;
+  
+  @IsOptional()
+  @Transform(({ value }) => value?.value ?? value)
+  @Type(() => Date)
+  @IsDate()
+  terminatedAt?: Date;
+   
+  @IsOptional()
+  @IsString()
+  terminationReason?: string;
 }
 
 export class UpdateLeaseDto {

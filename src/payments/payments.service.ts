@@ -7,6 +7,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
+import { SubmitProofDto } from './dto/submit-proof.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -90,6 +91,41 @@ export class PaymentsService {
         return payment;
     }
 
+    async submitTenantProof(id: string, tenantId: string, dto: SubmitProofDto): Promise<Payment> {
+        const payment = await this.findOne(id, tenantId);
+
+        if (payment.tenantId !== tenantId) {
+            throw new ForbiddenException('You can only submit proof for your own payments.');
+        }
+
+        if (payment.status === PaymentStatus.PAID) {
+            throw new BadRequestException('This payment has already been marked as paid.');
+        }
+
+        payment.status = PaymentStatus.VERIFYING;
+        payment.paidDate = new Date(dto.paidDate);
+        payment.paymentMethod = dto.paymentMethod;
+        payment.transactionRef = dto.transactionRef;
+        if (dto.transactionDocument) {
+            payment.transactionDocument = dto.transactionDocument;
+        }
+        payment.notes = dto.notes;
+
+        const updated = await this.paymentRepository.save(payment);
+
+        // Notify landlord
+        await this.notificationsService.send({
+            userId: payment.landlordId,
+            type: NotificationType.PAYMENT_RECEIVED,
+            title: 'Payment Proof Submitted',
+            message: `A tenant has submitted payment proof for ${payment.lease.property.addressLine1}. Please verify.`,
+            referenceId: id,
+            referenceType: 'payment',
+        });
+
+        return updated;
+    }
+
     async recordPayment(id: string, landlordId: string, dto: RecordPaymentDto): Promise<Payment> {
         const payment = await this.findOne(id, landlordId);
 
@@ -110,8 +146,8 @@ export class PaymentsService {
         await this.notificationsService.send({
             userId: payment.tenantId,
             type: NotificationType.PAYMENT_RECEIVED,
-            title: 'Payment Received',
-            message: `We have received your payment of $${payment.amountPaid} for the period ${payment.periodYear}.`,
+            title: 'Payment Received & Verified',
+            message: `We have received and verified your payment of ₦${Number(payment.amountPaid).toLocaleString()} for the period ${payment.periodYear}.`,
             referenceId: id,
             referenceType: 'payment',
         });
@@ -133,6 +169,7 @@ export class PaymentsService {
             year,
             totalRevenue: 0,
             propertyBreakdown: {},
+            monthlyBreakdown: new Array(12).fill(0) as number[],
         };
 
         payments.forEach(p => {
@@ -149,6 +186,10 @@ export class PaymentsService {
                 };
             }
             report.propertyBreakdown[propertyId].total += amount;
+
+            if (p.paidDate) {
+                report.monthlyBreakdown[p.paidDate.getMonth()] += amount;
+            }
         });
 
         return report;

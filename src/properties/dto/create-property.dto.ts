@@ -8,10 +8,92 @@ import {
   IsEnum,
   Min,
   IsArray,
+  IsBoolean,
+  ValidateNested,
 } from 'class-validator';
-import { PropertyStatus, PropertyType } from '../entities/property.entity';
+import { Type } from 'class-transformer';
+import { PropertyStatus, PropertyType } from '../entities/property.enum';
+
+export class PropertyUnitDto {
+  @IsString({ message: 'Unit name must be a string' })
+  @IsNotEmpty({ message: 'Unit name is required' })
+  name: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Rent amount must be a number' })
+  @IsPositive({ message: 'Rent amount must be positive' })
+  rentAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  bedrooms?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  bathrooms?: number;
+
+  @IsOptional()
+  @IsEnum(PropertyStatus, {
+    message: 'Status must be available, occupied, partially_occupied, or maintenance',
+  })
+  status?: PropertyStatus;
+}
+
+export class AdditionalFeesDto {
+  @IsOptional()
+  @IsNumber({}, { message: 'Service charge must be a number' })
+  @Min(0)
+  serviceCharge?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Caution fee must be a number' })
+  @Min(0)
+  cautionFee?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Agency fee must be a number' })
+  @Min(0)
+  agencyFee?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Legal fee must be a number' })
+  @Min(0)
+  legalFee?: number;
+}
+
+export class UtilitiesDto {
+  @IsOptional()
+  @IsEnum(['prepaid', 'postpaid', 'none'], { message: 'Electricity must be prepaid, postpaid, or none' })
+  electricity?: 'prepaid' | 'postpaid' | 'none';
+
+  @IsOptional()
+  @IsEnum(['borehole', 'well', 'none'], { message: 'Water must be borehole, well, or none' })
+  water?: 'borehole' | 'well' | 'none';
+
+  @IsOptional()
+  @IsBoolean()
+  wasteManagement?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  security?: boolean;
+}
 
 export class CreatePropertyDto {
+  @IsString({ message: 'Name must be a string' })
+  @IsNotEmpty({ message: 'Name is required' })
+  name: string;
+
+  @IsString({ message: 'Tenant id must be a string' })
+  @IsOptional()
+  tenantId?: string;
+
+  @IsOptional()
+  @IsString({ message: 'Description must be a string' })
+  description?: string;
+
   @IsString({ message: 'Address must be a string' })
   @IsNotEmpty({ message: 'Address is required' })
   addressLine1: string;
@@ -34,14 +116,36 @@ export class CreatePropertyDto {
   })
   zipCode: string;
 
+  @IsOptional()
+  @IsString({ message: 'Country must be a string' })
+  country?: string;
+
   @IsEnum(PropertyType, {
     message: 'Invalid property type',
   })
   propertyType: PropertyType;
 
+  @IsOptional()
+  @IsNumber({}, { message: 'Latitude must be a number' })
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Longitude must be a number' })
+  longitude?: number;
+
+  @IsOptional()
+  @IsEnum(['new', 'renovated', 'old'], { message: 'Condition must be new, renovated, or old' })
+  condition?: 'new' | 'renovated' | 'old';
+
+  @IsOptional()
   @IsNumber({}, { message: 'Rent amount must be a number' })
   @IsPositive({ message: 'Rent amount must be positive' })
-  rentAmount: number;
+  rentAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  rentDurationInMonths?: number;
 
   @IsOptional()
   @IsNumber()
@@ -60,7 +164,36 @@ export class CreatePropertyDto {
   status?: PropertyStatus;
 
   @IsOptional()
+  @ValidateNested()
+  @Type(() => AdditionalFeesDto)
+  additionalFees?: AdditionalFeesDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UtilitiesDto)
+  utilities?: UtilitiesDto;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  units?: string[];
+  amenities?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isListed?: boolean;
+
+  @IsOptional()
+  @Type(() => Date)
+  publishedAt?: Date;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PropertyUnitDto)
+  units?: PropertyUnitDto[];
 }

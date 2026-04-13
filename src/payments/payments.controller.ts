@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, Query, P
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
+import { SubmitProofDto } from './dto/submit-proof.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -38,5 +39,11 @@ export class PaymentsController {
     @Roles(UserRole.LANDLORD)
     recordPayment(@Param('id') id: string, @Request() req, @Body() dto: RecordPaymentDto) {
         return this.paymentsService.recordPayment(id, req.user.id, dto);
+    }
+
+    @Patch(':id/submit-proof')
+    @Roles(UserRole.TENANT)
+    submitProof(@Param('id') id: string, @Request() req, @Body() dto: SubmitProofDto) {
+        return this.paymentsService.submitTenantProof(id, req.user.id, dto);
     }
 }

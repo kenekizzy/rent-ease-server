@@ -3,12 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PropertiesService } from './properties.service';
 import { PropertiesController } from './properties.controller';
 import { Property } from './entities/property.entity';
-import { AuthModule } from 'src/auth/auth.module';
-import { UsersModule } from 'src/users/users.module';
-import { User } from 'src/users/entities';
+import { PropertyUnit } from './entities/property-unit.entity';
+import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
+import { User } from '../users/entities';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Property, User]), AuthModule, UsersModule],
+  imports: [TypeOrmModule.forFeature([Property, User, PropertyUnit]), AuthModule, UsersModule],
   controllers: [PropertiesController],
   providers: [PropertiesService],
   exports: [PropertiesService],

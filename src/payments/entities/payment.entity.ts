@@ -5,6 +5,7 @@ import { User } from '../../users/entities/user.entity';
 
 export enum PaymentStatus {
   PENDING = 'pending',
+  VERIFYING = 'verifying',
   PAID = 'paid',
   OVERDUE = 'overdue',
   PARTIAL = 'partial',

@@ -11,6 +11,7 @@ import { Document } from '../../files/entities/document.entity';
 export enum UserRole {
   LANDLORD = 'landlord',
   TENANT = 'tenant',
+  UNDETERMINED = 'undetermined',
 }
 
 @Entity('users')
@@ -49,9 +50,6 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
 
-
-
-  // Relationships
   @OneToMany(() => Property, (property) => property.landlord)
   properties: Property[];
 

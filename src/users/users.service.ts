@@ -95,6 +95,36 @@ export class UsersService {
     await this.userRepository.remove(user);
   }
 
+  async changePassword(userId: string, changePasswordDto: any): Promise<void> {
+    const user = await this.userRepository.findOne({ 
+      where: { id: userId },
+      select: ['id', 'password'] 
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const isMatch = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
+    if (!isMatch) throw new ConflictException('Incorrect current password');
+
+    const saltRounds = 12;
+    user.password = await bcrypt.hash(changePasswordDto.newPassword, saltRounds);
+    await this.userRepository.save(user);
+  }
+
+  async getNotificationPreferences(userId: string): Promise<NotificationPreference> {
+    let pref = await this.preferenceRepository.findOne({ where: { userId } });
+    if (!pref) {
+      pref = this.preferenceRepository.create({ userId });
+      pref = await this.preferenceRepository.save(pref);
+    }
+    return pref;
+  }
+
+  async updateNotificationPreferences(userId: string, dto: any): Promise<NotificationPreference> {
+    const pref = await this.getNotificationPreferences(userId);
+    Object.assign(pref, dto);
+    return await this.preferenceRepository.save(pref);
+  }
+
   async validatePassword(user: User, password: string): Promise<boolean> {
     return await bcrypt.compare(password, user.password);
   }

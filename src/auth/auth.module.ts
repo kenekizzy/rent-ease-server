@@ -13,7 +13,7 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AuthorizationGuard } from './guards/authorization.guard';
-import { MailerModule } from 'src/mailer/mailer.module';
+import { MailerModule } from '../mailer/mailer.module';
 
 @Module({
   imports: [

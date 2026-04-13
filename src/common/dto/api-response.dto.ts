@@ -2,7 +2,7 @@ export class ApiResponseDto<T> {
   success: boolean;
   data?: T;
   message?: string;
-  errors?: string[];
+  errors?: any[];
   timestamp: string;
 
   constructor(data?: T, message?: string, success: boolean = true) {

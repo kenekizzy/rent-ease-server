@@ -16,16 +16,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
 
     const exceptionResponse = exception.getResponse();
-    const message =
-      typeof exceptionResponse === 'string'
-        ? exceptionResponse
-        : (exceptionResponse as { message?: string | string[] }).message ||
-          'An error occurred';
+    let message = 'An error occurred';
+    let errors: any[] = [];
 
-    const errors = Array.isArray(message) ? message : [message];
+    if (typeof exceptionResponse === 'string') {
+      message = exceptionResponse;
+    } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      const res = exceptionResponse as any;
+      message = res.message || 'An error occurred';
 
-    const errorResponse = new ApiResponseDto(null, 'Request failed', false);
-    errorResponse.errors = errors;
+      if (res.errors) {
+        // Use custom errors from ValidationPipe if available
+        errors = Array.isArray(res.errors) ? res.errors : [res.errors];
+      } else if (Array.isArray(res.message)) {
+        // Handle default NestJS validation error messages
+        errors = res.message;
+        message = 'Validation failed';
+      }
+    }
+
+    const errorResponse = new ApiResponseDto(null, message, false);
+    errorResponse.errors = errors.length > 0 ? errors : [message];
 
     response.status(status).json(errorResponse);
   }

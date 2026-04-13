@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -16,6 +17,7 @@ import { Payment } from './payments/entities/payment.entity';
 import { Complaint } from './complaints/entities/complaint.entity';
 import { AppNotification } from './notifications/entities/notification.entity';
 import { NotificationPreference } from './notifications/entities/notification-preferences.entity';
+import { PropertyUnit } from './properties/entities/property-unit.entity';
 import { Document } from './files/entities/document.entity';
 import { MailerModule } from './mailer/mailer.module';
 import { FilesModule } from './files/files.module';
@@ -24,6 +26,9 @@ import { LeaseModule } from './lease/lease.module';
 import { ComplaintsModule } from './complaints/complaints.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
+import { StatsModule } from './stats/stats.module';
+import { ActivitiesModule } from './activities/activities.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   imports: [
@@ -49,12 +54,14 @@ import { PaymentsModule } from './payments/payments.module';
           AppNotification,
           NotificationPreference,
           Document,
+          PropertyUnit,
         ],
-        synchronize: configService.get('NODE_ENV') === 'development',
+        synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     MailerModule,
@@ -64,6 +71,9 @@ import { PaymentsModule } from './payments/payments.module';
     ComplaintsModule,
     NotificationsModule,
     PaymentsModule,
+    StatsModule,
+    ActivitiesModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -46,7 +46,7 @@ export class CreateUserDto {
   })
   phone?: string;
 
-  @IsEnum(UserRole, { message: 'Role must be either landlord or tenant' })
+  @IsEnum(UserRole, { message: 'Role must be landlord, tenant or undetermined' })
   @IsNotEmpty({ message: 'Role is required' })
   role: UserRole;
 }
