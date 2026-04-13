@@ -9,7 +9,7 @@ import { PropertiesService } from '../properties/properties.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { EmailService } from '../mailer/mailer.service';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class LeaseService {
@@ -153,7 +153,7 @@ export class LeaseService {
       }
     }
 
-    const inviteToken = uuid();
+    const inviteToken = randomUUID();
 
     const lease = this.leaseRepository.create({
       propertyId: dto.propertyId,

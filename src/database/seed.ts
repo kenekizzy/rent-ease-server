@@ -9,7 +9,7 @@ import { Lease, LeaseStatus } from '../lease/entities/lease.entity';
 import { Complaint, ComplaintPriority, ComplaintStatus } from '../complaints/entities/complaint.entity';
 import { NotificationPreference } from '../notifications/entities/notification-preferences.entity';
 import * as bcrypt from 'bcryptjs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 
 // Load environment variables from .env.development.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.development.local') });
@@ -41,11 +41,11 @@ async function seed() {
 
     // 1. Seed Users (Landlords and Tenants)
     const usersData = [
-        { id: uuid(), firstName: 'Emeka', lastName: 'Okoro', email: 'emeka@yopmail.com', role: UserRole.LANDLORD },
-        { id: uuid(), firstName: 'Chinelo', lastName: 'Adebayo', email: 'chinelo@yopmail.com', role: UserRole.LANDLORD },
-        { id: uuid(), firstName: 'Yusuf', lastName: 'Ibrahim', email: 'yusuf@yopmail.com', role: UserRole.TENANT },
-        { id: uuid(), firstName: 'Amina', lastName: 'Bello', email: 'amina@yopmail.com', role: UserRole.TENANT },
-        { id: uuid(), firstName: 'Olumide', lastName: 'Johnson', email: 'olumide@yopmail.com', role: UserRole.TENANT },
+        { id: randomUUID(), firstName: 'Emeka', lastName: 'Okoro', email: 'emeka@yopmail.com', role: UserRole.LANDLORD },
+        { id: randomUUID(), firstName: 'Chinelo', lastName: 'Adebayo', email: 'chinelo@yopmail.com', role: UserRole.LANDLORD },
+        { id: randomUUID(), firstName: 'Yusuf', lastName: 'Ibrahim', email: 'yusuf@yopmail.com', role: UserRole.TENANT },
+        { id: randomUUID(), firstName: 'Amina', lastName: 'Bello', email: 'amina@yopmail.com', role: UserRole.TENANT },
+        { id: randomUUID(), firstName: 'Olumide', lastName: 'Johnson', email: 'olumide@yopmail.com', role: UserRole.TENANT },
     ];
 
     const users: User[] = [];
