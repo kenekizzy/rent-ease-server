@@ -34,7 +34,7 @@ import { BillingModule } from './billing/billing.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.development.local`,
+      envFilePath: process.env.NODE_ENV === 'production' ? '.env.development.prod' : '.env.development.local',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

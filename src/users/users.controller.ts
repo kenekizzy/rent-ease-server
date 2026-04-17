@@ -39,6 +39,11 @@ export class UsersController {
     return new UserResponseDto(fullUser);
   }
 
+  @Get('profile/notifications')
+  async getNotificationSettings(@CurrentUser() user: User) {
+    return await this.usersService.getNotificationPreferences(user.id);
+  }
+
   @Get(':id')
   @AllowSelfOrRoles(UserRole.LANDLORD)
   async findOne(@Param('id') id: string, @CurrentUser() currentUser: User): Promise<UserResponseDto> {
@@ -48,6 +53,31 @@ export class UsersController {
     
     const user = await this.usersService.findOne(id);
     return new UserResponseDto(user);
+  }
+
+  @Patch('profile')
+  async updateProfile(
+    @CurrentUser() user: User,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
+    const updatedUser = await this.usersService.update(user.id, updateUserDto);
+    return new UserResponseDto(updatedUser);
+  }
+
+  @Patch('profile/password')
+  async changePassword(
+    @CurrentUser() user: User,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<void> {
+    return await this.usersService.changePassword(user.id, changePasswordDto);
+  }
+
+  @Patch('profile/notifications')
+  async updateNotificationSettings(
+    @CurrentUser() user: User,
+    @Body() dto: UpdateNotificationPreferenceDto,
+  ) {
+    return await this.usersService.updateNotificationPreferences(user.id, dto);
   }
 
   @Patch(':id')
@@ -66,39 +96,9 @@ export class UsersController {
     return new UserResponseDto(user);
   }
 
-  @Patch('profile')
-  async updateProfile(
-    @CurrentUser() user: User,
-    @Body() updateUserDto: UpdateUserDto,
-  ): Promise<UserResponseDto> {
-    const updatedUser = await this.usersService.update(user.id, updateUserDto);
-    return new UserResponseDto(updatedUser);
-  }
-
   @Delete(':id')
   @LandlordsOnly()
   async remove(@Param('id') id: string): Promise<void> {
     return await this.usersService.remove(id);
-  }
-
-  @Patch('profile/password')
-  async changePassword(
-    @CurrentUser() user: User,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ): Promise<void> {
-    return await this.usersService.changePassword(user.id, changePasswordDto);
-  }
-
-  @Get('profile/notifications')
-  async getNotificationSettings(@CurrentUser() user: User) {
-    return await this.usersService.getNotificationPreferences(user.id);
-  }
-
-  @Patch('profile/notifications')
-  async updateNotificationSettings(
-    @CurrentUser() user: User,
-    @Body() dto: UpdateNotificationPreferenceDto,
-  ) {
-    return await this.usersService.updateNotificationPreferences(user.id, dto);
   }
 }

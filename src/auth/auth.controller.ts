@@ -63,11 +63,8 @@ export class AuthController {
    @Public()
    @Get('google/callback')
    @UseGuards(GoogleAuthGuard)
-   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
-     const result = await this.authService.oauthLogin(req.user);
-      // Redirect to frontend with tokens
-     const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
-     return res.redirect(redirectUrl);
+   async googleAuthCallback(@Req() req: Request) {
+     return await this.authService.oauthLogin(req.user);
    }
 
 

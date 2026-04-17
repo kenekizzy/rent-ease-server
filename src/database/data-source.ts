@@ -1,11 +1,14 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
+import * as path from 'path';
 
-// Load environment variables
-config();
+// Load environment variables matching app.module.ts logic
+const envPath = process.env.NODE_ENV === 'production' 
+  ? '.env.development.prod' 
+  : '.env.development.local';
 
-const configService = new ConfigService();
+config({ path: path.resolve(process.cwd(), envPath) });
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
